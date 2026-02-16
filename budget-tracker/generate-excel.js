@@ -1251,7 +1251,7 @@ function getPieChartXml() {
           <c:cat><c:strRef><c:f>Dashboard!$B$39:$B$46</c:f><c:strCache><c:ptCount val="8"/>
             ${["Lebensmittel","Transport","Wohnung","Unterhaltung","Gesundheit","Bildung","Kleidung","Restaurant"].map((n,i) => `<c:pt idx="${i}"><c:v>${n}</c:v></c:pt>`).join("")}
           </c:strCache></c:strRef></c:cat>
-          <c:val><c:numRef><c:f>Dashboard!$C$39:$C$46</c:f><c:numCache><c:formatCode>#,##0.00\\ "\\u20ac"</c:formatCode><c:ptCount val="8"/>
+          <c:val><c:numRef><c:f>Dashboard!$C$39:$C$46</c:f><c:numCache><c:formatCode>#,##0.00\\ "€"</c:formatCode><c:ptCount val="8"/>
             ${[0,1,2,3,4,5,6,7].map(i => `<c:pt idx="${i}"><c:v>0</c:v></c:pt>`).join("")}
           </c:numCache></c:numRef></c:val>
         </c:ser>
@@ -1276,7 +1276,7 @@ function getPieChartXml() {
 }
 
 function getBarChartXml() {
-  const monthNames = ["Jan","Feb","M\\u00e4r","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+  const monthNames = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
               xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -1305,7 +1305,7 @@ function getBarChartXml() {
           <c:cat><c:strRef><c:f>Dashboard!$B$13:$B$24</c:f><c:strCache><c:ptCount val="12"/>
             ${monthNames.map((m,i) => `<c:pt idx="${i}"><c:v>${m}</c:v></c:pt>`).join("")}
           </c:strCache></c:strRef></c:cat>
-          <c:val><c:numRef><c:f>Dashboard!$C$13:$C$24</c:f><c:numCache><c:formatCode>#,##0.00\\ "\\u20ac"</c:formatCode><c:ptCount val="12"/>
+          <c:val><c:numRef><c:f>Dashboard!$C$13:$C$24</c:f><c:numCache><c:formatCode>#,##0.00\\ "€"</c:formatCode><c:ptCount val="12"/>
             ${[...Array(12)].map((_,i) => `<c:pt idx="${i}"><c:v>0</c:v></c:pt>`).join("")}
           </c:numCache></c:numRef></c:val>
         </c:ser>
@@ -1316,7 +1316,7 @@ function getBarChartXml() {
           <c:cat><c:strRef><c:f>Dashboard!$B$13:$B$24</c:f><c:strCache><c:ptCount val="12"/>
             ${monthNames.map((m,i) => `<c:pt idx="${i}"><c:v>${m}</c:v></c:pt>`).join("")}
           </c:strCache></c:strRef></c:cat>
-          <c:val><c:numRef><c:f>Dashboard!$D$13:$D$24</c:f><c:numCache><c:formatCode>#,##0.00\\ "\\u20ac"</c:formatCode><c:ptCount val="12"/>
+          <c:val><c:numRef><c:f>Dashboard!$D$13:$D$24</c:f><c:numCache><c:formatCode>#,##0.00\\ "€"</c:formatCode><c:ptCount val="12"/>
             ${[...Array(12)].map((_,i) => `<c:pt idx="${i}"><c:v>0</c:v></c:pt>`).join("")}
           </c:numCache></c:numRef></c:val>
         </c:ser>
@@ -1332,7 +1332,7 @@ function getBarChartXml() {
       </c:catAx>
       <c:valAx>
         <c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/>
-        <c:numFmt formatCode="#,##0\\ &quot;\\u20ac&quot;" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>
+        <c:numFmt formatCode="#,##0\\ &quot;€&quot;" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>
         <c:spPr><a:ln><a:noFill/></a:ln></c:spPr>
         <c:txPr><a:bodyPr rot="0" vert="horz"/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="800"><a:solidFill><a:srgbClr val="8B949E"/></a:solidFill><a:latin typeface="Segoe UI"/></a:defRPr></a:pPr><a:endParaRPr lang="de-DE"/></a:p></c:txPr>
         <c:crossAx val="111111111"/><c:crosses val="autoZero"/>
