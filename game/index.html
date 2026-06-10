@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$100M MIND — Business Learning Game</title>
+<style>
+  :root {
+    --gold: #f5a623;
+    --gold-dark: #d4891a;
+    --gold-light: #ffc85c;
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --card: #161616;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #888;
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCREEN SYSTEM ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── COMMON ── */
+  .container { max-width: 760px; margin: 0 auto; padding: 0 20px; width: 100%; }
+
+  .gold { color: var(--gold); }
+  .muted { color: var(--muted); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 700; letter-spacing: .5px; transition: all .18s;
+  }
+  .btn-gold {
+    background: var(--gold); color: #000;
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,166,35,.35); }
+  .btn-outline {
+    background: transparent; color: var(--gold); border: 2px solid var(--gold);
+  }
+  .btn-outline:hover { background: rgba(245,166,35,.1); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+  }
+
+  .progress-bar-wrap {
+    width: 100%; background: var(--bg3); border-radius: 99px; height: 6px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+    border-radius: 99px; transition: width .5s ease;
+  }
+
+  .tag {
+    display: inline-block; padding: 4px 10px; border-radius: 99px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .tag-gold { background: rgba(245,166,35,.15); color: var(--gold); border: 1px solid rgba(245,166,35,.3); }
+  .tag-green { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+  .tag-red { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+
+  /* ── HEADER ── */
+  .game-header {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .game-header .logo { font-size: 18px; font-weight: 900; letter-spacing: -1px; }
+  .game-header .stats { display: flex; gap: 20px; align-items: center; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--muted);
+  }
+  .stat-chip .val { color: var(--gold); font-size: 16px; }
+
+  /* ── INTRO SCREEN ── */
+  #screen-intro {
+    align-items: center; justify-content: center; text-align: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(245,166,35,.08) 0%, transparent 70%);
+    padding: 40px 20px;
+  }
+  .intro-badge {
+    display: inline-block; background: rgba(245,166,35,.12); border: 1px solid rgba(245,166,35,.4);
+    color: var(--gold); padding: 6px 16px; border-radius: 99px; font-size: 12px;
+    font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px;
+  }
+  #screen-intro h1 {
+    font-size: clamp(42px, 10vw, 80px); font-weight: 900; line-height: .95;
+    letter-spacing: -3px; margin-bottom: 20px;
+  }
+  #screen-intro h1 span { display: block; color: var(--gold); }
+  #screen-intro p { font-size: 18px; color: var(--muted); max-width: 480px; margin: 0 auto 40px; line-height: 1.6; }
+  .intro-features {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px;
+  }
+  .intro-feature {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .intro-feature .icon { font-size: 18px; }
+
+  /* ── LEVEL NAV ── */
+  .level-nav {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+  }
+  .level-steps {
+    display: flex; align-items: center; gap: 0; max-width: 760px; margin: 0 auto;
+  }
+  .level-step {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    position: relative;
+  }
+  .level-step:not(:last-child)::after {
+    content: ''; position: absolute; top: 16px; left: calc(50% + 16px);
+    right: calc(-50% + 16px); height: 2px; background: var(--border);
+    z-index: 0;
+  }
+  .level-step.done:not(:last-child)::after { background: var(--gold); }
+  .step-dot {
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border);
+    background: var(--bg3); display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--muted); z-index: 1; position: relative;
+    transition: all .3s;
+  }
+  .level-step.active .step-dot {
+    border-color: var(--gold); background: var(--gold); color: #000;
+  }
+  .level-step.done .step-dot {
+    border-color: var(--gold); background: transparent; color: var(--gold);
+  }
+  .step-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-align: center; }
+  .level-step.active .step-label { color: var(--gold); }
+
+  /* ── LEVEL WRAPPER ── */
+  .level-content { flex: 1; padding: 32px 20px; overflow-y: auto; }
+  .level-title { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .level-heading { font-size: clamp(26px, 5vw, 40px); font-weight: 900; letter-spacing: -1.5px; margin-bottom: 12px; line-height: 1.05; }
+  .level-desc { font-size: 16px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+
+  /* ── L1: VALUE EQUATION ── */
+  .value-eq-display {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; margin-bottom: 28px; text-align: center;
+  }
+  .value-eq-formula { font-size: 13px; color: var(--muted); margin-bottom: 16px; letter-spacing: 1px; }
+  .value-score {
+    font-size: 72px; font-weight: 900; color: var(--gold); line-height: 1;
+    letter-spacing: -4px; transition: all .3s;
+  }
+  .value-score-label { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .value-score-bar { margin-top: 16px; }
+
+  .slider-group { display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px; }
+  .slider-item {}
+  .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider-label { font-size: 15px; font-weight: 700; }
+  .slider-sublabel { font-size: 12px; color: var(--muted); }
+  .slider-val { font-size: 22px; font-weight: 900; color: var(--gold); }
+
+  input[type=range] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 6px; border-radius: 99px; background: var(--bg3);
+    outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gold); cursor: pointer;
+    box-shadow: 0 0 0 4px rgba(245,166,35,.2);
+    transition: box-shadow .2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 8px rgba(245,166,35,.25); }
+  input[type=range].negative::-webkit-slider-thumb { background: var(--red); box-shadow: 0 0 0 4px rgba(239,68,68,.2); }
+  input[type=range].negative::-webkit-slider-thumb:hover { box-shadow: 0 0 0 8px rgba(239,68,68,.25); }
+
+  .eq-tip { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 4px; }
+
+  /* ── L2: DIVERGENT THINKING ── */
+  .timer-ring-wrap { display: flex; justify-content: center; margin-bottom: 24px; }
+  .timer-ring { position: relative; width: 120px; height: 120px; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle { fill: none; stroke-width: 8; }
+  .timer-ring .track { stroke: var(--bg3); }
+  .timer-ring .fill { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset .9s linear; }
+  .timer-ring .fill.warning { stroke: #ef4444; }
+  .timer-num {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 900; color: var(--gold); line-height: 1;
+  }
+  .timer-num.warning { color: var(--red); }
+  .timer-num span { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1px; }
+
+  .divergent-prompt {
+    background: linear-gradient(135deg, rgba(245,166,35,.08), rgba(245,166,35,.03));
+    border: 1px solid rgba(245,166,35,.25); border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 20px;
+  }
+  .divergent-prompt-label { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .divergent-prompt h3 { font-size: 20px; font-weight: 800; line-height: 1.3; }
+
+  .idea-input-wrap { display: flex; gap: 10px; margin-bottom: 16px; }
+  .idea-input {
+    flex: 1; background: var(--bg3); border: 2px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; color: var(--text); font-size: 16px; outline: none; transition: border .2s;
+  }
+  .idea-input:focus { border-color: var(--gold); }
+  .idea-input::placeholder { color: var(--muted); }
+
+  .ideas-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; }
+  .idea-item {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px;
+    animation: slideIn .2s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .idea-num { font-size: 11px; font-weight: 700; color: var(--gold); min-width: 22px; }
+  .ideas-count-badge {
+    background: var(--gold); color: #000; font-size: 28px; font-weight: 900;
+    width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 8px;
+  }
+
+  /* ── L3: OFFER BUILDER ── */
+  .offer-canvas {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 24px; min-height: 120px;
+  }
+  .offer-canvas-title { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  .offer-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+  .offer-slot {
+    border: 2px dashed var(--border); border-radius: 8px; padding: 8px 14px;
+    font-size: 13px; color: var(--muted); min-width: 100px; text-align: center;
+  }
+  .offer-slot.filled {
+    border-style: solid; border-color: var(--gold); color: var(--text);
+    background: rgba(245,166,35,.08);
+  }
+
+  .offer-score-display {
+    text-align: center; margin-bottom: 24px;
+  }
+  .offer-score-num { font-size: 56px; font-weight: 900; color: var(--gold); line-height: 1; letter-spacing: -3px; }
+  .offer-score-max { font-size: 20px; color: var(--muted); }
+  .offer-score-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .components-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+    margin-bottom: 24px;
+  }
+  .component-card {
+    background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+    padding: 16px; cursor: pointer; transition: all .2s; user-select: none;
+  }
+  .component-card:hover { border-color: rgba(245,166,35,.5); background: rgba(245,166,35,.04); }
+  .component-card.selected { border-color: var(--gold); background: rgba(245,166,35,.08); }
+  .component-card .comp-icon { font-size: 28px; margin-bottom: 8px; }
+  .component-card .comp-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .component-card .comp-points { font-size: 12px; color: var(--gold); font-weight: 700; }
+  .component-card .comp-desc { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  /* ── L4: NICHE DOWN ── */
+  .niche-funnel {
+    display: flex; flex-direction: column; align-items: center; gap: 0; margin-bottom: 28px;
+  }
+  .niche-layer {
+    border-radius: 8px; padding: 14px 20px; text-align: center;
+    transition: all .3s; cursor: pointer; border: 2px solid transparent;
+  }
+  .niche-layer.selected { border-color: var(--gold); }
+  .niche-layer-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .niche-layer-val { font-weight: 700; }
+
+  .niche-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .niche-option {
+    background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+    padding: 16px; cursor: pointer; transition: all .2s;
+  }
+  .niche-option:hover { border-color: rgba(245,166,35,.5); }
+  .niche-option.selected { border-color: var(--gold); background: rgba(245,166,35,.06); }
+  .niche-option .n-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .niche-option .n-size { font-size: 12px; }
+  .niche-option .n-val { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .richness-meter {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+    margin-bottom: 24px;
+  }
+  .richness-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .richness-label { font-size: 14px; font-weight: 600; }
+  .richness-val { font-size: 18px; font-weight: 900; color: var(--gold); }
+
+  /* ── L5: SCENARIOS ── */
+  .scenario-card {
+    background: linear-gradient(135deg, rgba(245,166,35,.06), rgba(245,166,35,.02));
+    border: 1px solid rgba(245,166,35,.2); border-radius: 12px; padding: 24px; margin-bottom: 24px;
+  }
+  .scenario-situation { font-size: 13px; color: var(--gold); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .scenario-text { font-size: 18px; font-weight: 700; line-height: 1.5; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .choice-btn {
+    background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+    padding: 16px 20px; cursor: pointer; text-align: left; transition: all .2s;
+    font-size: 15px; color: var(--text); line-height: 1.4;
+  }
+  .choice-btn:hover:not(:disabled) { border-color: rgba(245,166,35,.5); background: rgba(245,166,35,.04); }
+  .choice-btn.correct { border-color: var(--green); background: rgba(34,197,94,.08); }
+  .choice-btn.wrong { border-color: var(--red); background: rgba(239,68,68,.08); }
+  .choice-btn:disabled { cursor: default; }
+
+  .feedback-box {
+    border-radius: 10px; padding: 16px 20px; font-size: 15px; line-height: 1.5;
+    display: none; margin-bottom: 20px;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); }
+  .feedback-box.wrong { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); }
+  .feedback-title { font-weight: 800; font-size: 16px; margin-bottom: 6px; }
+
+  .scenario-progress { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+
+  /* ── RESULTS SCREEN ── */
+  #screen-results {
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(245,166,35,.1) 0%, transparent 65%);
+    padding: 40px 20px; text-align: center;
+  }
+  .results-trophy { font-size: 72px; margin-bottom: 16px; }
+  .results-title { font-size: clamp(36px, 8vw, 60px); font-weight: 900; letter-spacing: -2px; margin-bottom: 8px; }
+  .results-sub { font-size: 18px; color: var(--muted); margin-bottom: 36px; }
+  .results-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px; width: 100%; max-width: 600px; margin: 0 auto 40px;
+  }
+  .result-stat {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .result-stat-val { font-size: 40px; font-weight: 900; color: var(--gold); letter-spacing: -2px; }
+  .result-stat-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .result-insight {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; max-width: 600px; width: 100%; margin: 0 auto 32px; text-align: left;
+  }
+  .result-insight-title { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+  .result-insight-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+  .result-insight-item .bullet { color: var(--gold); font-weight: 900; flex-shrink: 0; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  .fade-up { animation: fadeUp .4s ease both; }
+  .delay-1 { animation-delay: .1s; }
+  .delay-2 { animation-delay: .2s; }
+  .delay-3 { animation-delay: .3s; }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+  .pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+  /* ── UTILS ── */
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .flex-center { display: flex; align-items: center; justify-content: center; }
+  .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+  .mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; }
+  .text-center { text-align: center; }
+
+  .hormozi-quote {
+    border-left: 3px solid var(--gold); padding: 12px 16px;
+    background: rgba(245,166,35,.05); border-radius: 0 8px 8px 0;
+    font-size: 14px; color: var(--muted); font-style: italic; line-height: 1.6;
+    margin-top: 16px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     SCREEN 1: INTRO
+════════════════════════════════ -->
+<div id="screen-intro" class="screen active">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center">
+    <div class="intro-badge">Business Game · Inspired by Hormozi</div>
+    <h1 class="fade-up">$100M<span>MIND</span></h1>
+    <p class="fade-up delay-1">Lerne die Prinzipien, die Millionen-Businesses aufbauen — durch echte Entscheidungen und divergentes Denken.</p>
+    <div class="intro-features fade-up delay-2">
+      <div class="intro-feature"><span class="icon">⚖️</span> Value Equation</div>
+      <div class="intro-feature"><span class="icon">💡</span> Divergent Thinking</div>
+      <div class="intro-feature"><span class="icon">🎯</span> Offer Builder</div>
+      <div class="intro-feature"><span class="icon">🔬</span> Niche Down</div>
+      <div class="intro-feature"><span class="icon">🧠</span> Szenarien</div>
+    </div>
+    <button class="btn btn-gold fade-up delay-3" onclick="startGame()" style="font-size:18px;padding:18px 48px">
+      SPIEL STARTEN →
+    </button>
+    <p class="muted fade-up delay-3" style="margin-top:20px;font-size:14px">5 Level · ~10 Minuten · Keine Anmeldung</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN 2: GAME
+════════════════════════════════ -->
+<div id="screen-game" class="screen">
+
+  <!-- Header -->
+  <div class="game-header">
+    <div class="logo">$100M <span class="gold">MIND</span></div>
+    <div class="stats">
+      <div class="stat-chip">🏆 <span class="val" id="score-display">0</span> Pts</div>
+      <div class="stat-chip" id="level-chip">Level <span class="val" id="level-display">1</span>/5</div>
+    </div>
+  </div>
+
+  <!-- Level nav -->
+  <div class="level-nav">
+    <div class="level-steps">
+      <div class="level-step active" id="step-1">
+        <div class="step-dot">1</div>
+        <div class="step-label">Value Eq.</div>
+      </div>
+      <div class="level-step" id="step-2">
+        <div class="step-dot">2</div>
+        <div class="step-label">Divergent</div>
+      </div>
+      <div class="level-step" id="step-3">
+        <div class="step-dot">3</div>
+        <div class="step-label">Offer</div>
+      </div>
+      <div class="level-step" id="step-4">
+        <div class="step-dot">4</div>
+        <div class="step-label">Niche</div>
+      </div>
+      <div class="level-step" id="step-5">
+        <div class="step-dot">5</div>
+        <div class="step-label">Szenarien</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level content -->
+  <div class="level-content" id="level-content"></div>
+
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN 3: RESULTS
+════════════════════════════════ -->
+<div id="screen-results" class="screen">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px">
+    <div class="results-trophy" id="results-trophy">🏆</div>
+    <h2 class="results-title" id="results-title">Gut gemacht!</h2>
+    <p class="results-sub" id="results-sub">Du hast alle 5 Level abgeschlossen</p>
+    <div class="results-grid" id="results-grid"></div>
+    <div class="result-insight" id="results-insights"></div>
+    <button class="btn btn-gold" onclick="resetGame()" style="font-size:16px">
+      🔄 Nochmal spielen
+    </button>
+    <p class="muted" style="margin-top:14px;font-size:13px">Teile dein Ergebnis und fordere Freunde heraus!</p>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const state = {
+  score: 0,
+  level: 1,
+  levelScores: {},
+  divergentIdeas: [],
+  offerComponents: [],
+  nicheChoices: {},
+  scenarioResults: [],
+};
+
+// ═══════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ═══════════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  show('screen-game');
+  renderLevel(1);
+}
+
+function resetGame() {
+  state.score = 0; state.level = 1;
+  state.levelScores = {}; state.divergentIdeas = [];
+  state.offerComponents = []; state.nicheChoices = {};
+  state.scenarioResults = [];
+  updateHeader();
+  show('screen-intro');
+}
+
+function updateHeader() {
+  document.getElementById('score-display').textContent = state.score;
+  document.getElementById('level-display').textContent = state.level;
+}
+
+function updateSteps(current) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step-' + i);
+    el.classList.remove('active', 'done');
+    if (i < current) { el.classList.add('done'); el.querySelector('.step-dot').textContent = '✓'; }
+    else if (i === current) { el.classList.add('active'); el.querySelector('.step-dot').textContent = i; }
+    else { el.querySelector('.step-dot').textContent = i; }
+  }
+}
+
+function addScore(pts) {
+  state.score += pts;
+  updateHeader();
+  const el = document.getElementById('score-display');
+  el.style.transform = 'scale(1.4)';
+  el.style.color = '#fff';
+  setTimeout(() => { el.style.transform = ''; el.style.color = ''; }, 300);
+}
+
+function nextLevel() {
+  state.level++;
+  if (state.level > 5) { showResults(); return; }
+  updateHeader();
+  updateSteps(state.level);
+  renderLevel(state.level);
+}
+
+function renderLevel(n) {
+  updateSteps(n);
+  const fns = [null, renderL1, renderL2, renderL3, renderL4, renderL5];
+  fns[n]();
+}
+
+// ═══════════════════════════════════════════════
+// LEVEL 1 — VALUE EQUATION
+// ═══════════════════════════════════════════════
+function renderL1() {
+  document.getElementById('level-content').innerHTML = `
+    <div class="container fade-up">
+      <div class="level-title">Level 1 · Die Value Equation</div>
+      <div class="level-heading">Was macht ein Angebot<br><span class="gold">unwiderstehlich?</span></div>
+      <div class="level-desc">Hormozi's Value Equation: Je höher Traumresultat & Wahrscheinlichkeit — je niedriger Zeit & Aufwand — desto größer der wahrgenommene Wert. Stelle die Slider ein und maximiere deinen Value Score.</div>
+
+      <div class="value-eq-display">
+        <div class="value-eq-formula">DREAM OUTCOME × LIKELIHOOD ÷ (TIME DELAY × EFFORT)</div>
+        <div class="value-score" id="v-score">0</div>
+        <div class="value-score-label">Value Score</div>
+        <div class="value-score-bar">
+          <div class="progress-bar-wrap" style="max-width:300px;margin:0 auto">
+            <div class="progress-bar-fill" id="v-bar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-item card">
+          <div class="slider-header">
+            <div>
+              <div class="slider-label">🎯 Dream Outcome</div>
+              <div class="slider-sublabel">Wie stark ist das Ergebnis, das du versprichst?</div>
+            </div>
+            <div class="slider-val" id="v1-val">5</div>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="v1" oninput="updateValueEq()">
+          <div class="eq-tip">„Ich helfe Unternehmern, 6-stellig zu verdienen" vs. „Ich helfe bei der Buchhaltung"</div>
+        </div>
+        <div class="slider-item card">
+          <div class="slider-header">
+            <div>
+              <div class="slider-label">✅ Perceived Likelihood</div>
+              <div class="slider-sublabel">Wie glaubwürdig ist dein Versprechen?</div>
+            </div>
+            <div class="slider-val" id="v2-val">5</div>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="v2" oninput="updateValueEq()">
+          <div class="eq-tip">Testimonials, Case Studies, Garantien — erhöhen die Likelihood</div>
+        </div>
+        <div class="slider-item card">
+          <div class="slider-header">
+            <div>
+              <div class="slider-label">⏱️ Time Delay <span class="muted" style="font-weight:400">(niedriger = besser)</span></div>
+              <div class="slider-sublabel">Wie lange bis zum Ergebnis?</div>
+            </div>
+            <div class="slider-val" id="v3-val" style="color:var(--red)">5</div>
+          </div>
+          <input type="range" class="negative" min="1" max="10" value="5" id="v3" oninput="updateValueEq()">
+          <div class="eq-tip">„Ergebnisse in 24h" schlägt „Ergebnisse in 6 Monaten"</div>
+        </div>
+        <div class="slider-item card">
+          <div class="slider-header">
+            <div>
+              <div class="slider-label">💪 Effort & Sacrifice <span class="muted" style="font-weight:400">(niedriger = besser)</span></div>
+              <div class="slider-sublabel">Wie viel Arbeit muss der Kunde leisten?</div>
+            </div>
+            <div class="slider-val" id="v4-val" style="color:var(--red)">5</div>
+          </div>
+          <input type="range" class="negative" min="1" max="10" value="5" id="v4" oninput="updateValueEq()">
+          <div class="eq-tip">„Wir machen alles für dich" ist wertvoller als „Tu-es-selbst Kurs"</div>
+        </div>
+      </div>
+
+      <div id="l1-target-hint" style="margin-bottom:20px"></div>
+      <div style="text-align:right">
+        <button class="btn btn-gold" id="l1-next-btn" onclick="finishL1()">Score einreichen →</button>
+      </div>
+      <div class="hormozi-quote mt-16">"The value of your offer is determined by what the person THINKS it's worth — not what you think it's worth." — Alex Hormozi</div>
+    </div>`;
+  updateValueEq();
+}
+
+function updateValueEq() {
+  const v1 = +document.getElementById('v1').value;
+  const v2 = +document.getElementById('v2').value;
+  const v3 = +document.getElementById('v3').value;
+  const v4 = +document.getElementById('v4').value;
+  document.getElementById('v1-val').textContent = v1;
+  document.getElementById('v2-val').textContent = v2;
+  document.getElementById('v3-val').textContent = v3;
+  document.getElementById('v4-val').textContent = v4;
+  const raw = (v1 * v2) / (v3 * v4);
+  const score = Math.round(raw * 10) / 10;
+  document.getElementById('v-score').textContent = score;
+  const pct = Math.min(100, (raw / 10) * 100);
+  document.getElementById('v-bar').style.width = pct + '%';
+  const hint = document.getElementById('l1-target-hint');
+  if (raw >= 5) {
+    hint.innerHTML = '<div class="tag tag-green">Starkes Angebot! Weiter so.</div>';
+  } else if (raw >= 2) {
+    hint.innerHTML = '<div class="tag tag-gold">Durchschnittlich — erhöhe Dream Outcome & Likelihood</div>';
+  } else {
+    hint.innerHTML = '<div class="tag tag-red">Schwaches Angebot — senke Time Delay & Effort</div>';
+  }
+}
+
+function finishL1() {
+  const v1 = +document.getElementById('v1').value;
+  const v2 = +document.getElementById('v2').value;
+  const v3 = +document.getElementById('v3').value;
+  const v4 = +document.getElementById('v4').value;
+  const raw = (v1 * v2) / (v3 * v4);
+  const pts = Math.round(Math.min(100, raw * 10));
+  state.levelScores[1] = pts;
+  addScore(pts);
+  nextLevel();
+}
+
+// ═══════════════════════════════════════════════
+// LEVEL 2 — DIVERGENT THINKING SPRINT
+// ═══════════════════════════════════════════════
+let divergentTimer = null;
+let divergentTimeLeft = 90;
+const DIVERGENT_PROMPTS = [
+  { text: 'Du bietest Fitness-Coaching an. Nenne so viele Wege wie möglich, wie du neue Kunden gewinnen könntest.', hint: 'Denk: Online, Offline, Partnerships, Content, Events...' },
+];
+
+function renderL2() {
+  state.divergentIdeas = [];
+  divergentTimeLeft = 90;
+  const prompt = DIVERGENT_PROMPTS[0];
+  document.getElementById('level-content').innerHTML = `
+    <div class="container fade-up">
+      <div class="level-title">Level 2 · Divergent Thinking Sprint</div>
+      <div class="level-heading">Mehr Ideen =<br><span class="gold">Mehr Chancen</span></div>
+      <div class="level-desc">Hormozi sagt: Erst divergieren (viele Ideen generieren), dann konvergieren (die beste wählen). Du hast 90 Sekunden — schreibe so viele Ideen wie möglich. Quantität schlägt Qualität jetzt!</div>
+
+      <div class="timer-ring-wrap">
+        <div class="timer-ring">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle class="track" cx="60" cy="60" r="52"/>
+            <circle class="fill" id="timer-circle" cx="60" cy="60" r="52"
+              stroke-dasharray="326.7" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num" id="timer-num">
+            <div id="timer-val">90</div>
+            <span>Sek</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divergent-prompt">
+        <div class="divergent-prompt-label">Deine Challenge</div>
+        <h3>${prompt.text}</h3>
+        <p class="muted" style="font-size:13px;margin-top:8px">${prompt.hint}</p>
+      </div>
+
+      <div class="idea-input-wrap" id="idea-input-wrap">
+        <input type="text" class="idea-input" id="idea-input" placeholder="Idee eingeben..." maxlength="120" onkeydown="handleIdeaKey(event)">
+        <button class="btn btn-gold" onclick="addIdea()" style="padding:14px 20px">+</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span class="muted" style="font-size:13px">Enter oder + drücken zum Hinzufügen</span>
+        <span style="font-size:13px;font-weight:700;color:var(--gold)" id="idea-count">0 Ideen</span>
+      </div>
+      <div class="ideas-list" id="ideas-list"></div>
+      <div id="l2-result" style="display:none;text-align:center;padding:20px 0"></div>
+      <div class="hormozi-quote mt-16">"The more options you generate, the better your final decision will be. Never go with your first idea." — Alex Hormozi</div>
+    </div>`;
+  document.getElementById('idea-input').focus();
+  startDivergentTimer();
+}
+
+function handleIdeaKey(e) { if (e.key === 'Enter') addIdea(); }
+
+function addIdea() {
+  if (divergentTimeLeft <= 0) return;
+  const inp = document.getElementById('idea-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  state.divergentIdeas.push(val);
+  inp.value = '';
+  const list = document.getElementById('ideas-list');
+  const div = document.createElement('div');
+  div.className = 'idea-item';
+  div.innerHTML = `<span class="idea-num">#${state.divergentIdeas.length}</span><span>${escHtml(val)}</span>`;
+  list.insertBefore(div, list.firstChild);
+  document.getElementById('idea-count').textContent = state.divergentIdeas.length + ' Ideen';
+  inp.focus();
+}
+
+function startDivergentTimer() {
+  const total = 90;
+  const circle = document.getElementById('timer-circle');
+  const circumference = 326.7;
+  divergentTimer = setInterval(() => {
+    divergentTimeLeft--;
+    const pct = divergentTimeLeft / total;
+    circle.style.strokeDashoffset = circumference * (1 - pct);
+    const valEl = document.getElementById('timer-val');
+    const numEl = document.getElementById('timer-num');
+    if (valEl) valEl.textContent = divergentTimeLeft;
+    if (divergentTimeLeft <= 10) {
+      circle.classList.add('warning');
+      if (numEl) numEl.classList.add('warning');
+    }
+    if (divergentTimeLeft <= 0) {
+      clearInterval(divergentTimer);
+      finishL2();
+    }
+  }, 1000);
+}
+
+function finishL2() {
+  clearInterval(divergentTimer);
+  const n = state.divergentIdeas.length;
+  const pts = Math.min(100, n * 10);
+  state.levelScores[2] = pts;
+  addScore(pts);
+  const inp = document.getElementById('idea-input-wrap');
+  if (inp) inp.style.display = 'none';
+  const res = document.getElementById('l2-result');
+  if (res) {
+    res.style.display = 'block';
+    let rank, emoji;
+    if (n >= 10) { rank = 'Divergenz-Meister!'; emoji = '🧠'; }
+    else if (n >= 6) { rank = 'Guter Denker!'; emoji = '💡'; }
+    else if (n >= 3) { rank = 'Solide!'; emoji = '👍'; }
+    else { rank = 'Übe mehr!'; emoji = '📚'; }
+    res.innerHTML = `
+      <div class="ideas-count-badge">${n}</div>
+      <div style="font-size:24px;font-weight:900;margin-bottom:8px">${emoji} ${rank}</div>
+      <div class="muted" style="margin-bottom:20px">Du hast ${n} Ideen in 90 Sekunden generiert. +${pts} Punkte!</div>
+      <button class="btn btn-gold" onclick="nextLevel()">Weiter zu Level 3 →</button>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// LEVEL 3 — GRAND SLAM OFFER BUILDER
+// ═══════════════════════════════════════════════
+const OFFER_COMPONENTS = [
+  { id: 'core', icon: '🎯', name: 'Core Service', pts: 10, desc: 'Das Hauptprodukt oder die Kernleistung', required: true },
+  { id: 'result', icon: '🏆', name: 'Garantiertes Ergebnis', pts: 20, desc: 'Money-back oder Ergebnis-Garantie' },
+  { id: 'fast', icon: '⚡', name: 'Schnelle Lieferung', pts: 15, desc: '„Ergebnisse in 30 Tagen oder weniger"' },
+  { id: 'bonus1', icon: '🎁', name: 'Bonus #1', pts: 10, desc: 'Ergänzender Mehrwert (Templates, Tools)' },
+  { id: 'bonus2', icon: '🎁', name: 'Bonus #2', pts: 10, desc: 'Weiterer Bonus — mehr wahrgenommener Wert' },
+  { id: 'community', icon: '👥', name: 'Community/Support', pts: 15, desc: 'Zugang zu Gruppe, Slack, Discord, etc.' },
+  { id: 'exclusive', icon: '🔒', name: 'Exklusivität', pts: 15, desc: 'Limitierte Plätze oder zeitliche Verknappung' },
+  { id: 'personal', icon: '🤝', name: '1:1 Coaching', pts: 20, desc: 'Persönlicher Zugang zum Experten' },
+  { id: 'payment', icon: '💳', name: 'Flexible Zahlung', pts: 10, desc: 'Ratenzahlung, Pay-after-results' },
+];
+
+function renderL3() {
+  state.offerComponents = [];
+  document.getElementById('level-content').innerHTML = `
+    <div class="container fade-up">
+      <div class="level-title">Level 3 · Grand Slam Offer Builder</div>
+      <div class="level-heading">Baue ein<br><span class="gold">unwiderstehliches Angebot</span></div>
+      <div class="level-desc">Ein Grand Slam Offer ist so gut, dass jeder Vergleich mit der Konkurrenz absurd wirkt. Kombiniere Komponenten strategisch — aber pass auf: zu viel kann auch nach „billig" wirken.</div>
+
+      <div class="offer-score-display">
+        <div><span class="offer-score-num" id="offer-score">0</span><span class="offer-score-max">/125</span></div>
+        <div class="offer-score-label" id="offer-score-label">Wähle Komponenten aus</div>
+      </div>
+
+      <div class="offer-canvas" id="offer-canvas">
+        <div class="offer-canvas-title">Dein Angebot</div>
+        <div class="offer-slots" id="offer-slots">
+          <div class="offer-slot">Noch nichts ausgewählt</div>
+        </div>
+      </div>
+
+      <div class="components-grid">
+        ${OFFER_COMPONENTS.map(c => `
+          <div class="component-card" id="comp-${c.id}" onclick="toggleComp('${c.id}')">
+            <div class="comp-icon">${c.icon}</div>
+            <div class="comp-name">${c.name}</div>
+            <div class="comp-points">+${c.pts} Punkte</div>
+            <div class="comp-desc">${c.desc}</div>
+          </div>`).join('')}
+      </div>
+
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-gold" id="l3-btn" onclick="finishL3()">Angebot fertigstellen →</button>
+      </div>
+      <div class="hormozi-quote mt-16">"You want to make an offer so good that people feel stupid saying no." — Alex Hormozi</div>
+    </div>`;
+  // Auto-select core
+  toggleComp('core');
+}
+
+function toggleComp(id) {
+  const comp = OFFER_COMPONENTS.find(c => c.id === id);
+  if (comp.required) return; // core always selected
+  const el = document.getElementById('comp-' + id);
+  const idx = state.offerComponents.indexOf(id);
+  if (idx === -1) {
+    state.offerComponents.push(id);
+    el.classList.add('selected');
+  } else {
+    if (id === 'core') return;
+    state.offerComponents.splice(idx, 1);
+    el.classList.remove('selected');
+  }
+  updateOfferScore();
+  updateOfferCanvas();
+}
+
+function updateOfferScore() {
+  const total = state.offerComponents.reduce((s, id) => {
+    const c = OFFER_COMPONENTS.find(x => x.id === id);
+    return s + (c ? c.pts : 0);
+  }, 0);
+  document.getElementById('offer-score').textContent = total;
+  let label;
+  if (total >= 80) label = '🔥 Grand Slam Offer!';
+  else if (total >= 50) label = '💪 Starkes Angebot';
+  else if (total >= 30) label = '📦 Durchschnittliches Angebot';
+  else label = '😐 Schwaches Angebot';
+  document.getElementById('offer-score-label').textContent = label;
+}
+
+function updateOfferCanvas() {
+  const slots = document.getElementById('offer-slots');
+  if (state.offerComponents.length === 0) {
+    slots.innerHTML = '<div class="offer-slot">Noch nichts ausgewählt</div>';
+    return;
+  }
+  slots.innerHTML = state.offerComponents.map(id => {
+    const c = OFFER_COMPONENTS.find(x => x.id === id);
+    return `<div class="offer-slot filled">${c.icon} ${c.name}</div>`;
+  }).join('');
+}
+
+function finishL3() {
+  const total = state.offerComponents.reduce((s, id) => {
+    const c = OFFER_COMPONENTS.find(x => x.id === id);
+    return s + (c ? c.pts : 0);
+  }, 0);
+  const pts = Math.min(100, Math.round(total * 0.8));
+  state.levelScores[3] = pts;
+  addScore(pts);
+  nextLevel();
+}
+
+// ═══════════════════════════════════════════════
+// LEVEL 4 — NICHE DOWN
+// ═══════════════════════════════════════════════
+const NICHE_STEPS = [
+  {
+    label: 'Industrie', question: 'Welche Branche willst du bedienen?',
+    options: [
+      { title: 'Alle Branchen', size: '🌍 Massively', val: 'all', score: 10, desc: 'Maximale Reichweite, aber kaum Differenzierung' },
+      { title: 'Health & Wellness', size: '🏥 Groß', val: 'health', score: 60, desc: 'Klarer Fokus, viele Teilnischen verfügbar' },
+      { title: 'E-Commerce', size: '🛒 Sehr groß', val: 'ecom', score: 50, desc: 'Wachsend, aber viel Wettbewerb' },
+      { title: 'SaaS / Software', size: '💻 Mittel', val: 'saas', score: 70, desc: 'High-ticket, klar definierte Pain Points' },
+    ]
+  },
+  {
+    label: 'Zielgruppe', question: 'Wer genau in dieser Branche?',
+    options: [
+      { title: 'Alle Unternehmensgrößen', size: '🌐 Jeder', val: 'all', score: 10, desc: 'Zu breit — kein klares Messaging möglich' },
+      { title: 'Solo-Unternehmer', size: '👤 Klein aber fokussiert', val: 'solo', score: 60, desc: 'Klare Pain Points, schnelle Entscheidungen' },
+      { title: 'Scale-up (10-50 MA)', size: '🚀 Mittel', val: 'scaleup', score: 80, desc: 'Budget vorhanden, klare Wachstumsprobleme' },
+      { title: 'Enterprise (500+ MA)', size: '🏢 Groß', val: 'enterprise', score: 40, desc: 'Lange Sales Cycles, schwer zu erreichen' },
+    ]
+  },
+  {
+    label: 'Problem', question: 'Welches spezifische Problem löst du?',
+    options: [
+      { title: 'Allgemeine Optimierung', size: '🤷 Vage', val: 'general', score: 10, desc: 'Kann jeder behaupten — kein Alleinstellungsmerkmal' },
+      { title: 'Lead-Generierung', size: '🎯 Konkret', val: 'leads', score: 70, desc: 'Klares ROI-Argument, messbar' },
+      { title: 'Mitarbeiter-Retention', size: '👥 Spezifisch', val: 'retention', score: 75, desc: 'Brennendes Problem mit klaren Kosten' },
+      { title: 'Revenue-Leakage', size: '💰 Sehr spezifisch', val: 'revenue', score: 90, desc: '€€ direkt sichtbar — einfachster Verkauf' },
+    ]
+  },
+];
+
+let nicheStep = 0;
+let nicheScore = 0;
+
+function renderL4() {
+  nicheStep = 0;
+  nicheScore = 0;
+  state.nicheChoices = {};
+  renderNicheStep();
+}
+
+function renderNicheStep() {
+  const step = NICHE_STEPS[nicheStep];
+  const funnel = NICHE_STEPS.map((s, i) => {
+    const w = 100 - i * 15;
+    const chosen = state.nicheChoices[i];
+    return `<div class="niche-layer" style="width:${w}%;background:${i <= nicheStep ? 'rgba(245,166,35,0.08)' : 'var(--card)'};border:2px solid ${i === nicheStep ? 'var(--gold)' : (chosen ? 'rgba(245,166,35,0.4)' : 'var(--border)')};border-radius:8px;padding:12px 20px;text-align:center;margin-bottom:4px">
+      <div class="niche-layer-label">${s.label}</div>
+      <div class="niche-layer-val">${chosen ? chosen : '—'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('level-content').innerHTML = `
+    <div class="container fade-up">
+      <div class="level-title">Level 4 · Niche Down</div>
+      <div class="level-heading">Der Reiche ist in<br><span class="gold">der Nische</span></div>
+      <div class="level-desc">Hormozi sagt: „The riches are in the niches." Wähle deinen Zielmarkt immer enger, bis es sich fast zu spezifisch anfühlt — dann ist es richtig. Schritt ${nicheStep + 1} von ${NICHE_STEPS.length}.</div>
+
+      <div class="niche-funnel">${funnel}</div>
+
+      <div style="margin-bottom:16px;font-weight:700;font-size:18px">${step.question}</div>
+      <div class="niche-options">
+        ${step.options.map(o => `
+          <div class="niche-option" onclick="chooseNiche('${o.val}', ${o.score}, '${escHtml(o.title)}')">
+            <div class="n-title">${o.title}</div>
+            <div class="n-size" style="color:${o.score >= 70 ? 'var(--green)' : o.score >= 50 ? 'var(--gold)' : 'var(--red)'}">${o.size}</div>
+            <div class="n-val">${o.desc}</div>
+          </div>`).join('')}
+      </div>
+
+      <div class="richness-meter">
+        <div class="richness-row">
+          <div class="richness-label">Nischen-Score</div>
+          <div class="richness-val" id="niche-score-val">${nicheScore}</div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="niche-bar" style="width:${nicheScore}%"></div>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:8px">Je spezifischer deine Nische, desto höher dein Score</div>
+      </div>
+      <div class="hormozi-quote">"Everyone is afraid to niche down because they think they'll lose customers. The opposite is true." — Alex Hormozi</div>
+    </div>`;
+}
+
+function chooseNiche(val, score, title) {
+  state.nicheChoices[nicheStep] = title;
+  nicheScore = Math.round((nicheScore + score) / 2) || score;
+  nicheStep++;
+  if (nicheStep >= NICHE_STEPS.length) {
+    finishL4();
+  } else {
+    renderNicheStep();
+  }
+}
+
+function finishL4() {
+  const pts = Math.min(100, nicheScore);
+  state.levelScores[4] = pts;
+  addScore(pts);
+  nextLevel();
+}
+
+// ═══════════════════════════════════════════════
+// LEVEL 5 — BUSINESS SCENARIOS
+// ═══════════════════════════════════════════════
+const SCENARIOS = [
+  {
+    situation: 'Preisgestaltung',
+    text: 'Du hast einen neuen Kunden. Er fragt dich: „Was kostet das?" Wie antwortest du nach Hormozi-Prinzipien am besten?',
+    choices: [
+      { text: 'Sofort den niedrigsten Preis nennen, um nicht zu verlieren', correct: false, explain: 'Zu früh über Preis zu reden ist ein Fehler. Erst Wert aufbauen, dann Preis.' },
+      { text: 'Zuerst den vollen Wert des Ergebnisses kommunizieren, dann den Preis relativieren', correct: true, explain: 'Genau richtig! Hormozi: Präsentiere immer zuerst den Wert. Wenn der Wert klar ist, ist der Preis eine Kleinigkeit.' },
+      { text: 'Den Preis geheim halten und auf ein Gespräch bestehen', correct: false, explain: 'Intransparenz baut kein Vertrauen auf. Das ist kein Value-Building, das ist Manipulation.' },
+      { text: 'Fragen, was das Budget ist, und sich daran anpassen', correct: false, explain: 'Budget-Gespräche zu früh führen dazu, dass du dich nach unten verhandelst.' },
+    ]
+  },
+  {
+    situation: 'Skalierung',
+    text: 'Dein Coaching-Business läuft gut. Du verdienst 10k/Monat 1:1. Was ist der Hormozi-konforme nächste Schritt?',
+    choices: [
+      { text: 'Einfach mehr 1:1 Kunden annehmen', correct: false, explain: 'Das ist ein Ceiling. Zeit ist begrenzt. Du kannst nicht linear skalieren.' },
+      { text: 'Sofort einen YouTube-Kanal starten', correct: false, explain: 'Content ist gut für Leads, aber löst das Skalierungsproblem deiner Delivery nicht.' },
+      { text: 'Ein Gruppen-Programm oder Kurs entwickeln, der den 1:1-Wert auf viele überträgt', correct: true, explain: 'Richtig! Hormozi: Leverage schaffen. Einmal Wert erstellen, viele Male verkaufen. Das ist der Weg von 10k zu 100k.' },
+      { text: 'Preise senken, um mehr Kunden zu gewinnen', correct: false, explain: 'Preissenkung ist fast immer die falsche Antwort. Erhöhe stattdessen den wahrgenommenen Wert.' },
+    ]
+  },
+  {
+    situation: 'Lead-Generierung',
+    text: 'Du bekommst nicht genug Kunden. Hormozi unterscheidet zwischen "Warm Outreach" und "Cold Outreach". Was machst du zuerst?',
+    choices: [
+      { text: 'Sofort kalte Instagram-DMs an fremde Menschen schicken', correct: false, explain: 'Cold Outreach erst, wenn Warm Outreach ausgeschöpft ist. Starte immer mit dem warmen Netzwerk.' },
+      { text: 'Alle Menschen in deinem Netzwerk (Warm) kontaktieren, bevor du Cold Outreach machst', correct: true, explain: 'Perfekt! Hormozi: Dein bestehendes Netzwerk ist deine günstigste und schnellste Quelle. Erst 100 Warme kontaktieren, dann erst Kalt.' },
+      { text: 'Ads schalten, auch wenn du noch kein bewährtes Angebot hast', correct: false, explain: 'Ads funktionieren nur, wenn du bereits weißt, was konvertiert. Ohne Proof ist es verbranntes Geld.' },
+      { text: 'Warten, bis sich Kunden von selbst melden', correct: false, explain: 'Passiv warten ist der schnellste Weg zum Scheitern. Jeder Unternehmer muss aktiv Leads generieren.' },
+    ]
+  },
+  {
+    situation: 'Einwand-Behandlung',
+    text: 'Ein Interessent sagt: „Das ist zu teuer." Was ist die Hormozi-Antwort?',
+    choices: [
+      { text: '„OK, ich gebe dir 20% Rabatt"', correct: false, explain: 'Sofortiger Rabatt signalisiert, dass dein Preis nicht gerechtfertigt war. Es zerstört Vertrauen und deinen Wert.' },
+      { text: '„Im Vergleich zu was?" und dann den ROI verdeutlichen', correct: true, explain: 'Genau! Hormozi: „Zu teuer" ist ein Wertproblem, kein Preisproblem. Zeige den ROI. 5k für 50k Ergebnis = Schnäppchen.' },
+      { text: 'Den Einwand ignorieren und weitermachen', correct: false, explain: 'Einwände ignorieren führt zum verlorenen Deal. Sie müssen aufgelöst werden, nicht ignoriert.' },
+      { text: '„Dann sind Sie wohl nicht die richtige Person für uns"', correct: false, explain: 'Arroganz ohne Substanz ist kein Qualifizierungsmerkmal — das ist nur unhöflich.' },
+    ]
+  },
+  {
+    situation: 'Wachstumshebel',
+    text: 'Was ist nach Hormozi der einzige Weg, wie ein Business wächst?',
+    choices: [
+      { text: 'Mehr Social Media Follower bekommen', correct: false, explain: 'Follower sind Vanity Metrics. Sie korrelieren oft nicht direkt mit Umsatz.' },
+      { text: 'Mehr Leads, bessere Conversion oder höheren durchschnittlichen Auftragswert (AOV)', correct: true, explain: 'Richtig! Das ist Hormozis mathematische Formel: Revenue = Leads × Conversion Rate × Average Order Value × Frequency. Wachse durch diese Hebel.' },
+      { text: 'Ein besseres Produkt bauen', correct: false, explain: 'Ein besseres Produkt hilft, aber es ist kein Wachstumshebel, wenn niemand davon erfährt.' },
+      { text: 'Einen Investor finden', correct: false, explain: 'Investoren lösen kein Wachstumsproblem — sie skalieren nur, was bereits funktioniert. Erst Modell beweisen.' },
+    ]
+  },
+];
+
+let scenarioIdx = 0;
+let scenarioAnswered = false;
+
+function renderL5() {
+  scenarioIdx = 0;
+  state.scenarioResults = [];
+  renderScenario();
+}
+
+function renderScenario() {
+  scenarioAnswered = false;
+  const s = SCENARIOS[scenarioIdx];
+  document.getElementById('level-content').innerHTML = `
+    <div class="container fade-up">
+      <div class="level-title">Level 5 · Business Szenarien</div>
+      <div class="level-heading">Hormozi-Denken<br><span class="gold">in der Praxis</span></div>
+      <div class="scenario-progress">Szenario ${scenarioIdx + 1} von ${SCENARIOS.length}</div>
+      <div class="progress-bar-wrap" style="margin-bottom:24px">
+        <div class="progress-bar-fill" style="width:${(scenarioIdx / SCENARIOS.length) * 100}%"></div>
+      </div>
+
+      <div class="scenario-card">
+        <div class="scenario-situation">Thema: ${s.situation}</div>
+        <div class="scenario-text">${s.text}</div>
+      </div>
+
+      <div class="choices">
+        ${s.choices.map((c, i) => `
+          <button class="choice-btn" id="choice-${i}" onclick="answerScenario(${i})">${c.text}</button>
+        `).join('')}
+      </div>
+
+      <div class="feedback-box" id="feedback"></div>
+      <div id="scenario-next" style="display:none;text-align:right;margin-top:16px">
+        <button class="btn btn-gold" onclick="nextScenario()">
+          ${scenarioIdx + 1 < SCENARIOS.length ? 'Nächstes Szenario →' : 'Ergebnis anzeigen 🏆'}
+        </button>
+      </div>
+
+      <div class="hormozi-quote mt-16">"In business, you don't get what you deserve, you get what you negotiate — and what you know." — Alex Hormozi</div>
+    </div>`;
+}
+
+function answerScenario(idx) {
+  if (scenarioAnswered) return;
+  scenarioAnswered = true;
+  const s = SCENARIOS[scenarioIdx];
+  const c = s.choices[idx];
+  const btn = document.getElementById('choice-' + idx);
+
+  s.choices.forEach((ch, i) => {
+    const b = document.getElementById('choice-' + i);
+    b.disabled = true;
+    if (ch.correct) b.classList.add('correct');
+  });
+
+  const correct = c.correct;
+  if (!correct) btn.classList.add('wrong');
+
+  state.scenarioResults.push(correct);
+  const pts = correct ? 20 : 0;
+  if (pts > 0) addScore(pts);
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-box show ' + (correct ? 'correct' : 'wrong');
+  fb.innerHTML = `
+    <div class="feedback-title">${correct ? '✅ Richtig!' : '❌ Nicht ganz'}</div>
+    ${c.explain}`;
+
+  document.getElementById('scenario-next').style.display = 'block';
+}
+
+function nextScenario() {
+  scenarioIdx++;
+  if (scenarioIdx >= SCENARIOS.length) {
+    const pts = state.scenarioResults.filter(Boolean).length * 20;
+    state.levelScores[5] = pts;
+    showResults();
+  } else {
+    renderScenario();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RESULTS
+// ═══════════════════════════════════════════════
+function showResults() {
+  show('screen-results');
+  const correct = state.scenarioResults.filter(Boolean).length;
+  const total = state.score;
+  const maxScore = 100 + 100 + 100 + 100 + 100;
+  const pct = Math.round((total / maxScore) * 100);
+
+  let trophy, title, sub;
+  if (pct >= 80) { trophy = '🏆'; title = 'Grand Slam!'; sub = 'Du denkst wie ein $100M Founder'; }
+  else if (pct >= 60) { trophy = '🥇'; title = 'Starkes Ergebnis!'; sub = 'Sehr gutes Business-Verständnis'; }
+  else if (pct >= 40) { trophy = '🥈'; title = 'Gut gemacht!'; sub = 'Solide Grundlagen — weiter üben!'; }
+  else { trophy = '📚'; title = 'Lernpotenzial!'; sub = 'Lies $100M Offers und starte neu'; }
+
+  document.getElementById('results-trophy').textContent = trophy;
+  document.getElementById('results-title').textContent = title;
+  document.getElementById('results-sub').textContent = sub;
+
+  document.getElementById('results-grid').innerHTML = `
+    <div class="result-stat"><div class="result-stat-val">${total}</div><div class="result-stat-label">Punkte</div></div>
+    <div class="result-stat"><div class="result-stat-val">${pct}%</div><div class="result-stat-label">Gesamt</div></div>
+    <div class="result-stat"><div class="result-stat-val">${correct}/${SCENARIOS.length}</div><div class="result-stat-label">Szenarien</div></div>
+    <div class="result-stat"><div class="result-stat-val">${state.divergentIdeas.length}</div><div class="result-stat-label">Ideen</div></div>
+  `;
+
+  document.getElementById('results-insights').innerHTML = `
+    <div class="result-insight-title">Deine Hormozi-Takeaways</div>
+    <div class="result-insight-item"><span class="bullet">→</span><span>Die <strong>Value Equation</strong> ist dein Angebots-Kompass: Outcome × Likelihood ÷ Zeit × Aufwand</span></div>
+    <div class="result-insight-item"><span class="bullet">→</span><span><strong>Divergent Thinking</strong> zuerst: Generiere 10x mehr Ideen, bevor du dich entscheidest</span></div>
+    <div class="result-insight-item"><span class="bullet">→</span><span>Ein <strong>Grand Slam Offer</strong> macht Vergleiche mit der Konkurrenz irrelevant</span></div>
+    <div class="result-insight-item"><span class="bullet">→</span><span><strong>Nische down</strong> bis es wehtut — dann bist du wahrscheinlich nah genug dran</span></div>
+    <div class="result-insight-item"><span class="bullet">→</span><span>Wachstum = Leads × Conversion × <strong>Average Order Value</strong> — fokussiere auf alle drei</span></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
